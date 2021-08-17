@@ -23,8 +23,8 @@ That's it! You've installed the extension. Next we will create a button that tak
 2. Open up LioranBoard and create a new board. If you need help with that checkout [this documentation](https://christinna9031.github.io/LBDocumentation/index.html).
 3. There are 2 JSON files included in this repo, BanListFile and BanListList. These are premade buttons that I created to make this process easier.
 4. Copy the contents of the buttons one at a time and when you right click on a space in LioranBoard a "Import JSON" button will be there. Click that. 
-5. Two buttons should be on the board now. If you right click on the "Ban List (List)" button you can manually enter in a list of at most 2000 users that is COMMA (,) delimited. 
-6. If you right click on the "Ban List (File)" button you will see A LOT is going on. The only part that matters to you is this part: <br/> ![Button with File Settings](./buttonFileSettings.png)
+5. Two buttons should be on the board now. If you right click and select "Edit Commands" on the "Ban List (List)" button you can manually enter in a list of at most 2000 users that is COMMA (,) delimited. 
+6. If you right click and select "Edit Commands" on the "Ban List (File)" button you will see A LOT is going on. The only part that matters to you is this part: <br/> ![Button with File Settings](./buttonFileSettings.png)
     - The python script is the path to the .py file that is included in this repo.
     - The text file is where you have a .txt file that has a list of users with one name on each line. 
     - The ini file is where you store your lioran board application. In that folder is a folder by this name: LioranBoard Receiver(PC) then add "/ban_list.ini". Should look something like this "C:\lioranboard\LioranBoard Receiver(PC)\ban_list.ini"
