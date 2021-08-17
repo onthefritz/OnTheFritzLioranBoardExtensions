@@ -25,7 +25,7 @@ function LBBanList(oauth_token, twich_login, list_to_ban) {
             TwitchChatConnect.send(`PRIVMSG #${twich_login} :/ban ${listOfUsers[i].trim()}`);
 
             if (i > 0 && i % 95 == 0) {
-                LBAlert(`Ban Progress: ${i + 1} / ${listOfUsers.length + 1}`);
+                LBAlert(`Ban Progress: ${i} / ${listOfUsers.length}`);
                 await sleep(30000);
             }
         }
