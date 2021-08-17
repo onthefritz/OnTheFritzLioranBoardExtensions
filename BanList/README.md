@@ -26,7 +26,7 @@ That's it! You've installed the extension. Next we will create a button that tak
 5. Two buttons should be on the board now. If you right click on the "Ban List (List)" button you can manually enter in a list of at most 2000 users that is COMMA (,) delimited. 
 6. If you right click on the "Ban List (File)" button you will see A LOT is going on. The only part that matters to you is this part: <br/> ![Button with File Settings](./buttonFileSettings.png)
     - The python script is the path to the .py file that is included in this repo.
-    - The text file is where you have a .txt file that has a list of users with one on each. 
+    - The text file is where you have a .txt file that has a list of users with one name on each line. 
     - The ini file is where you store your lioran board application. In that folder is a folder by this name: LioranBoard Receiver(PC) then add "/ban_list.ini". Should look something like this "C:\lioranboard\LioranBoard Receiver(PC)\ban_list.ini"
     - The number of records is how many you want to process at a time. I recommend staying below 2000. 2000 records will take 12 minutes. 
 7. Once this is done just open up the PC Streamdeck and click on the button. It will create the ban_list.ini file, populate it with all the runs, and run the first run. After that you can just click the same button and it will run the next run. It won't repopulate the file unless the file is deleted for some reason. 
