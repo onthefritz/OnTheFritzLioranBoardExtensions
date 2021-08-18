@@ -1,0 +1,146 @@
+[extension_name]
+Auto Emote and Follower Mode
+
+[insert_external]
+<div><p>Auto Emote and Follower Mode is installed.</p><p>Based on a set number of similar messages kicks in Emote and 10 minute Follower Only Mode.</p></div>
+
+[insert_command]
+LBSendExtCommand('AutoEandFMode', { oauth_token: 'string', twich_login: 'string', watch_number: 'string', trigger_number: 'string', variance: 'string' });
+
+[insert_hook]
+case "AutoEandFMode":{
+	LBAutoEandFMode(LioranBoardJSON.oauth_token, LioranBoardJSON.twich_login, LioranBoardJSON.watch_number, LioranBoardJSON.trigger_number, LioranBoardJSON.variance);
+}break
+
+[insert_script]
+function LBAutoEandFMode(oauth_token, twich_login, number_of_messages_to_watch, number_of_occurrances_to_trigger_on, variance_in_messages) {
+    var messages = [];
+    var similarity_for_compare = (100 - variance_in_messages) / 100;
+
+    function similarity(s1, s2) {
+        var longer = s1;
+        var shorter = s2;
+        if (s1.length < s2.length) {
+            longer = s2;
+            shorter = s1;
+        }
+
+        var longerLength = longer.length;
+        if (longerLength == 0) {
+            return 1.0;
+        }
+        return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+    }
+
+    function editDistance(s1, s2) {
+        s1 = s1.toLowerCase();
+        s2 = s2.toLowerCase();
+
+        var costs = new Array();
+        for (var i = 0; i <= s1.length; i++) {
+            var lastValue = i;
+            for (var j = 0; j <= s2.length; j++) {
+                if (i == 0)
+                    costs[j] = j;
+                else {
+                    if (j > 0) {
+                        var newValue = costs[j - 1];
+                        if (s1.charAt(i - 1) != s2.charAt(j - 1))
+                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                        costs[j - 1] = lastValue;
+                        lastValue = newValue;
+                    }
+                }
+            }
+            if (i > 0)
+                costs[s2.length] = lastValue;
+        }
+        return costs[s2.length];
+    }
+    
+    function connectAutoEandFChat() {
+        if (on_server == 0) { return 0; }
+
+        TwitchChatConnect.onmessage = function (event) {
+            if (LBDebugPost) LBDebugPost('chatReceive', event.data);
+
+            let i_data; let i_type; let i_real_name; let i_channel; let user_id;
+            let { data } = event;
+            const i_count = (data.match(/\r\n/g) || []).length;
+
+            for (let i = 0; i < i_count; i++) {
+                let i_pos = data.indexOf('\r\n');
+                let i_str = ` ${data.slice(0, i_pos)}`;
+                data = data.slice(i_pos + 2);
+            
+                // seperate data
+                i_pos = i_str.indexOf(' :') + 1;
+                i_data = i_str.slice(0, i_pos);
+                i_str = i_str.slice(i_pos + 1);
+
+                // get type of data
+                i_pos = i_str.indexOf(':');
+                i_type = i_str.slice(0, i_pos);
+                i_str = i_str.slice(i_pos + 1);
+                i_real_name = i_type;
+                i_pos = i_type.indexOf(' ');
+                i_type = i_type.slice(i_pos + 1);
+                i_pos = i_type.indexOf(' ');
+    
+                if (i_pos !== -1) {
+                    i_channel = i_type.slice(i_type.indexOf(' ') + 1);
+                    i_channel = i_channel.replace(' ', '');
+                    i_channel = i_channel.replace('#', '');
+                    i_type = i_type.slice(0, i_pos);
+                }
+
+                switch (i_type) {
+                    default:
+                        break;
+                    // connected
+                    case '001': {
+                        const i_obj = {
+                            topic: 'ChatConnected',
+                            type: 'MESSAGE',
+                        };
+                        lioranboardclient.send(JSON.stringify(i_obj));
+                    } break;
+
+                    case 'PRIVMSG': {
+                        var message = i_str;
+                        var timesCounted = 1;
+
+                        for (var messageId = 0; messageId < messages.length; messageId++) {
+                            var savedMessage = messages[messageId];
+                            var similarValue = similarity(savedMessage.message, message);
+                            
+                            if (similarValue >= similarity_for_compare) {
+                                timesCounted += 1;
+                                savedMessage.count += 1;
+                            }
+                        }
+                        
+                        while (messages.length >= number_of_messages_to_watch) {
+                            messages.splice(0, 1);
+                        }
+                        messages.push({ message: message, count: timesCounted });
+
+                        var found = messages.find(messageObject => messageObject.count >= number_of_occurrances_to_trigger_on);
+                        if (found) {
+                            TwitchChatConnect.send(`PRIVMSG #${twich_login} :/emoteonly`);
+                            TwitchChatConnect.send(`PRIVMSG #${twich_login} :/followers 10m`);
+                            messages = [];
+                        }
+
+                    } break;
+                }
+            }
+        };
+    }
+  
+    connectAutoEandFChat();
+
+	return 1;
+}
+
+[insert_over]
