@@ -1,6 +1,9 @@
 # AutoEmoteAndFollowerExt
 Extension to auto kick in emote mode and follower only mode using lioran board.
 
+## NOTE
+This has the potential to hit legit raids from friends. It just depends on how strict you decide to make the variance and how many messages you watch for.
+
 ## How to use
 1. Download the extension and install it in Lioranboard.
 2. Take the SpamProtectionButton.json content and copy it.
