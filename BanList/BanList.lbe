@@ -5,15 +5,15 @@ Ban List
 <div><p>Ban List is installed.</p><p>Bans a list of users passed into the extension.</p></div>
 
 [insert_command]
-LBSendExtCommand('Ban List', { oauth_token: 'string', twich_login: 'string', list_to_ban: 'string' });
+LBSendExtCommand('Ban List', { oauth_token: 'string', twich_login: 'string', list_to_ban: 'string', reason: 'string' });
 
 [insert_hook]
 case "BanList":{
-	LBBanList(LioranBoardJSON.oauth_token, LioranBoardJSON.twich_login, LioranBoardJSON.list_to_ban);
+	LBBanList(LioranBoardJSON.oauth_token, LioranBoardJSON.twich_login, LioranBoardJSON.list_to_ban, LioranBoardJSON.reason);
 }break
 
 [insert_script]
-function LBBanList(oauth_token, twich_login, list_to_ban) {
+function LBBanList(oauth_token, twich_login, list_to_ban, reason) {
     twich_login = twich_login.toLowerCase();
 
     function sleep(ms) {
@@ -22,7 +22,7 @@ function LBBanList(oauth_token, twich_login, list_to_ban) {
 
 	async function banUsers(listOfUsers) {
         for (var i = 0; i < listOfUsers.length; i++) {
-            TwitchChatConnect.send(`PRIVMSG #${twich_login} :/ban ${listOfUsers[i].trim()}`);
+            TwitchChatConnect.send(`PRIVMSG #${twich_login} :/ban ${listOfUsers[i].trim()} ${reason}`);
 
             if (i > 0 && i % 95 == 0) {
                 LBAlert(`Ban Progress: ${i} / ${listOfUsers.length}`);
