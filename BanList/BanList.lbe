@@ -5,24 +5,33 @@ Ban List
 <div><p>Ban List is installed.</p><p>Bans a list of users passed into the extension.</p></div>
 
 [insert_command]
-LBSendExtCommand('Ban List', { oauth_token: 'string', twich_login: 'string', list_to_ban: 'string', reason: 'string' });
+LBSendExtCommand('Ban List', { twitch_chat: 'string', list_to_ban: 'string', reason: 'string', account: 'string', oauth_token: 'string' });
 
 [insert_hook]
 case "BanList":{
-	LBBanList(LioranBoardJSON.oauth_token, LioranBoardJSON.twich_login, LioranBoardJSON.list_to_ban, LioranBoardJSON.reason);
+	LBBanList(LioranBoardJSON.twitch_chat, LioranBoardJSON.list_to_ban, LioranBoardJSON.reason, LioranBoardJSON.account, LioranBoardJSON.oauth_token);
 }break
 
 [insert_script]
-function LBBanList(oauth_token, twich_login, list_to_ban, reason) {
-    twich_login = twich_login.toLowerCase();
+function LBBanList(twitch_chat, list_to_ban, reason, account, oauth_token) {
+    twitch_chat = twitch_chat.toLowerCase();
+    account = account.toLowerCase();
+    var TwitchChatBanBotConnect;
+    var twitchaltpingid = 0;
 
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
 	async function banUsers(listOfUsers) {
+        var chatAccount = TwitchChatConnect;
+        if (account) {
+            chatAccount = TwitchChatBanBotConnect;
+            await sleep(2000);
+        }
+
         for (var i = 0; i < listOfUsers.length; i++) {
-            TwitchChatConnect.send(`PRIVMSG #${twich_login} :/ban ${listOfUsers[i].trim()} ${reason}`);
+            chatAccount.send(`PRIVMSG #${twitch_chat} :/ban ${listOfUsers[i].trim()} ${reason}`);
 
             if (i > 0 && i % 95 == 0) {
                 LBAlert(`Ban Progress: ${i} / ${listOfUsers.length}`);
@@ -32,6 +41,47 @@ function LBBanList(oauth_token, twich_login, list_to_ban, reason) {
 
         LBAlert(`Finished Banning the list.`);
 	}
+
+    function connectBotTwitchAccountToChat(alt_oauth_token, alt_account_name) {
+        if (on_server == 0) { return 0; }
+        TwitchChatBanBotConnect = (new WebSocket('wss://irc-ws.chat.twitch.tv:443'));
+        TwitchChatBanBotConnect.binaryType = 'arraybuffer';
+
+        TwitchChatBanBotConnect.onopen = function (event) {
+            TwitchChatBanBotConnect.send(`PASS oauth:${alt_oauth_token}`);
+            TwitchChatBanBotConnect.send(`NICK ${alt_account_name}`);
+            TwitchChatBanBotConnect.send(`JOIN ${twitch_chat}`);
+            console.log('Connected alternate account to twitch chat for ban process.');
+            twitchaltpingid = setInterval(twitchchatping, 120000);
+            twitch_timeout = 4000;
+        };
+
+        TwitchChatBanBotConnect.onmessage = function (event) {
+            let { data } = event;
+            const i_count = (data.match(/\r\n/g) || []).length;
+            for (let i = 0; i < i_count; i++) {
+                let i_pos = data.indexOf('\r\n');
+                let i_str = ` ${data.slice(0, i_pos)}`;
+                data = data.slice(i_pos + 2);
+                // ping back
+                if (i_str.includes('PING')) {
+                    TwitchChatBanBotConnect.send('PONG :tmi.twitch.tv');
+                }
+            }
+        };
+
+        TwitchChatBanBotConnect.onclose = () => {
+            console.log('Disconnected alternate account from twitch chat for ban process.');
+            clearInterval(twitchaltpingid);
+        };
+
+        TwitchChatBanBotConnect.onerror = (e) => {
+        };
+    }
+
+    if (account) {
+        connectBotTwitchAccountToChat(oauth_token, account);
+    }
 
     banUsers(list_to_ban.split(','));
 
