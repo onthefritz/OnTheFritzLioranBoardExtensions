@@ -13,7 +13,7 @@ A few MAJOR things to note.
 
 ## How to install
 1. Download LioranBoard and unzip the folder. The contents of that zip folder contains the reciever (where the button is created) and a stream deck for both PC and android. If you don't want to create a twitch trigger than you will need to open the PC stream deck.
-2. Download this extension. At the top of this page click on "Code" then click on "Download ZIP". That will download a zip folder of this entire repository. Unzip this folder. 
+2. Download this extension. Check the releases and downloaded the latest BAN LIST [here](https://github.com/onthefritz/OnTheFritzLioranBoardExtensions/releases).
 3. Open LioranBoard (minimum v1.44a) and at the bottom left click on "Install Extension" and find the location that you put the BanList.lbe file. Then find the "tsl_transmitter.html" file that lives in the LioranBoard folder.
 
 That's it! You've installed the extension. Next we will create a button that takes a list and sends it to the extension to ban.
@@ -29,6 +29,8 @@ That's it! You've installed the extension. Next we will create a button that tak
     - The text file is where you have a .txt file that has a list of users with one name on each line. 
     - The ini file is where you store your lioran board application. In that folder is a folder by this name: LioranBoard Receiver(PC) then add "/ban_list.ini". Should look something like this "C:\lioranboard\LioranBoard Receiver(PC)\ban_list.ini"
     - The number of records is how many you want to process at a time. I recommend staying below 2000. 2000 records will take 12 minutes. 
+    - Chat to connect to is the chat you want to send the ban messages.
+    - The ban reason is what ever reason you have or want to add for the ban.
 7. Once this is done just open up the PC Streamdeck and click on the button. It will create the ban_list.ini file, populate it with all the runs, and run the first run. After that you can just click the same button and it will run the next run. It won't repopulate the file unless the file is deleted for some reason. 
 8. If at any point you want to reset the process just go to where the ban_list.ini file is and delete it. This button will recreate it and reprocess the text file.
 
