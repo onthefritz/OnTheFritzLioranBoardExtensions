@@ -1,21 +1,22 @@
 [extension_name]
-Auto Emote and Follower Mode
+Spam Protection
 
 [insert_external]
-<div><p>Auto Emote and Follower Mode is installed.</p><p>Based on a set number of similar messages kicks in Emote and 10 minute Follower Only Mode.</p></div>
+<div><p>Spam Protection is installed.</p><p>Based on a set number of similar messages kicks in Emote and 10 minute Follower Only Mode and timesout all users with similar messages.</p></div>
 
 [insert_command]
-LBSendExtCommand('AutoEandFMode', { oauth_token: 'string', twich_login: 'string', watch_number: 'string', trigger_number: 'string', variance: 'string' });
+LBSendExtCommand('SpamProtection', { username: 'string', watch_number: 'string', trigger_number: 'string', similarity: 'string', count_exact_match: 'bool' });
 
 [insert_hook]
-case "AutoEandFMode":{
-	LBAutoEandFMode(LioranBoardJSON.oauth_token, LioranBoardJSON.twich_login, LioranBoardJSON.watch_number, LioranBoardJSON.trigger_number, LioranBoardJSON.variance);
+case "SpamProtection":{
+	LBSpamProtection(LioranBoardJSON.username, LioranBoardJSON.watch_number, LioranBoardJSON.trigger_number, LioranBoardJSON.similarity, LioranBoardJSON.count_exact_match);
 }break
 
 [insert_script]
-function LBAutoEandFMode(oauth_token, twich_login, number_of_messages_to_watch, number_of_occurrances_to_trigger_on, variance_in_messages) {
+function LBSpamProtection(username, number_of_messages_to_watch, number_of_occurrances_to_trigger_on, similarity_in_messages, count_exact_match) {
     var messages = [];
-    var similarity_for_compare = (100 - variance_in_messages) / 100;
+    similarity_in_messages = similarity_in_messages / 100;
+    username = username.toLowerCase();
 
     function similarity(s1, s2) {
         var longer = s1;
@@ -58,7 +59,7 @@ function LBAutoEandFMode(oauth_token, twich_login, number_of_messages_to_watch, 
         return costs[s2.length];
     }
     
-    function connectAutoEandFChat() {
+    function connectSpamProtection() {
         if (on_server == 0) { return 0; }
 
         TwitchChatConnect.onmessage = function (event) {
@@ -107,28 +108,49 @@ function LBAutoEandFMode(oauth_token, twich_login, number_of_messages_to_watch, 
                     } break;
 
                     case 'PRIVMSG': {
+                        // Get user name
+                        i_pos = i_real_name.indexOf('!');
+                        i_real_name = i_real_name.slice(0, i_pos);
+
                         var message = i_str;
                         var timesCounted = 1;
+                        var isExactMatch = false;
 
                         for (var messageId = 0; messageId < messages.length; messageId++) {
                             var savedMessage = messages[messageId];
                             var similarValue = similarity(savedMessage.message, message);
                             
-                            if (similarValue >= similarity_for_compare) {
+                            if (!count_exact_match && similarValue == 1) {
+                                isExactMatch = true;
+                                continue;
+                            }
+
+                            if (similarValue >= similarity_in_messages) {
                                 timesCounted += 1;
                                 savedMessage.count += 1;
                             }
                         }
-                        
-                        while (messages.length >= number_of_messages_to_watch) {
-                            messages.splice(0, 1);
+
+                        if (!(!count_exact_match && isExactMatch)) {
+                            while (messages.length >= number_of_messages_to_watch) {
+                                messages.splice(0, 1);
+                            }
+                            messages.push({ message: message, count: timesCounted, username: i_real_name });
                         }
-                        messages.push({ message: message, count: timesCounted });
 
                         var found = messages.find(messageObject => messageObject.count >= number_of_occurrances_to_trigger_on);
                         if (found) {
-                            TwitchChatConnect.send(`PRIVMSG #${twich_login} :/emoteonly`);
-                            TwitchChatConnect.send(`PRIVMSG #${twich_login} :/followers 10m`);
+                            TwitchChatConnect.send(`PRIVMSG #${username} :/emoteonly`);
+                            TwitchChatConnect.send(`PRIVMSG #${username} :/followers 10m`);
+
+                            for (var similarMessageId = 0; similarMessageId < messages.length; similarMessageId++) {
+                                var savedMessage = messages[similarMessageId];
+
+                                if (savedMessage.count >= number_of_occurrances_to_trigger_on) {
+                                    TwitchChatConnect.send(`PRIVMSG #${username} :/timeout ${savedMessage.username} 1`);
+                                }
+                            }
+
                             messages = [];
                         }
 
@@ -138,7 +160,7 @@ function LBAutoEandFMode(oauth_token, twich_login, number_of_messages_to_watch, 
         };
     }
   
-    connectAutoEandFChat();
+    connectSpamProtection();
 
 	return 1;
 }
